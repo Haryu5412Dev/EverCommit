@@ -1,0 +1,90 @@
+name: Daily Auto Commit
+
+on:
+  schedule:
+    # This will be read from config.yml, default is 8 AM UTC daily
+    - cron: '0 8 * * *'
+  workflow_dispatch:  # Allows manual trigger
+
+jobs:
+  auto-commit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+
+      - name: Read configuration
+        id: config
+        run: |
+          # Install yq for YAML parsing
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+          # Read config values
+          USERNAME=$(yq eval '.github_username' config.yml)
+          EMAIL=$(yq eval '.github_email' config.yml)
+          MIN_COMMITS=$(yq eval '.min_commits' config.yml)
+          MAX_COMMITS=$(yq eval '.max_commits' config.yml)
+          COMMIT_MSG=$(yq eval '.commit_message' config.yml)
+          ACTIVITY_FILE=$(yq eval '.activity_file' config.yml)
+          MIN_DELAY=$(yq eval '.min_delay' config.yml)
+          MAX_DELAY=$(yq eval '.max_delay' config.yml)
+
+          # Export to GITHUB_OUTPUT
+          echo "username=$USERNAME" >> $GITHUB_OUTPUT
+          echo "email=$EMAIL" >> $GITHUB_OUTPUT
+          echo "min_commits=$MIN_COMMITS" >> $GITHUB_OUTPUT
+          echo "max_commits=$MAX_COMMITS" >> $GITHUB_OUTPUT
+          echo "commit_message=$COMMIT_MSG" >> $GITHUB_OUTPUT
+          echo "activity_file=$ACTIVITY_FILE" >> $GITHUB_OUTPUT
+          echo "min_delay=$MIN_DELAY" >> $GITHUB_OUTPUT
+          echo "max_delay=$MAX_DELAY" >> $GITHUB_OUTPUT
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "${{ steps.config.outputs.username }}"
+          git config --global user.email "${{ steps.config.outputs.email }}"
+
+      - name: Make Random Commits
+        run: |
+          MIN=${{ steps.config.outputs.min_commits }}
+          MAX=${{ steps.config.outputs.max_commits }}
+          ACTIVITY_FILE="${{ steps.config.outputs.activity_file }}"
+          COMMIT_MSG="${{ steps.config.outputs.commit_message }}"
+          MIN_DELAY=${{ steps.config.outputs.min_delay }}
+          MAX_DELAY=${{ steps.config.outputs.max_delay }}
+
+          # Generate random number of commits between MIN and MAX
+          NUM_COMMITS=$((MIN + RANDOM % (MAX - MIN + 1)))
+          echo "Making $NUM_COMMITS commits today"
+
+          for i in $(seq 1 $NUM_COMMITS); do
+            # Generate timestamp
+            TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
+
+            # Update activity log file
+            echo "Activity update - $TIMESTAMP - Commit #$i" >> "$ACTIVITY_FILE"
+
+            # Replace {timestamp} placeholder in commit message
+            FINAL_MSG="${COMMIT_MSG/\{timestamp\}/$TIMESTAMP}"
+
+            # Commit changes
+            git add .
+            git commit -m "$FINAL_MSG" || echo "Nothing to commit"
+
+            # Random sleep between commits (more natural appearance)
+            if [ $i -lt $NUM_COMMITS ]; then
+              DELAY=$((MIN_DELAY + RANDOM % (MAX_DELAY - MIN_DELAY + 1)))
+              echo "Waiting $DELAY seconds before next commit..."
+              sleep $DELAY
+            fi
+          done
+
+      - name: Push changes
+        run: |
+          git push origin ${{ github.ref_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
