@@ -2,11 +2,11 @@
 # Edit these settings to customize your automated commits
 
 # Your GitHub username (will be used for commits)
-github_username: "YOUR_GITHUB_USERNAME"
+github_username: "Haryu5412Dev"
 
 # Your email (use your GitHub noreply email for privacy)
 # Format: USERNAME@users.noreply.github.com
-github_email: "YOUR_EMAIL@users.noreply.github.com"
+github_email: "rjw081001@gmail.com"
 
 # Commit frequency (min and max commits per day)
 min_commits: 1
