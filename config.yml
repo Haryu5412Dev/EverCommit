@@ -10,7 +10,7 @@ github_email: "rjw081001@gmail.com"
 
 # Commit frequency (min and max commits per day)
 min_commits: 1
-max_commits: 10
+max_commits: 3
 
 # Schedule (cron format - default is 8 AM UTC daily)
 # Format: 'minute hour day month weekday'
