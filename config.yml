@@ -10,7 +10,7 @@ github_email: "rjw081001@gmail.com"
 
 # Commit frequency (min and max commits per day)
 min_commits: 1
-max_commits: 5
+max_commits: 10
 
 # Schedule (cron format - default is 8 AM UTC daily)
 # Format: 'minute hour day month weekday'
@@ -18,7 +18,7 @@ max_commits: 5
 #   '0 8 * * *'   - Every day at 8 AM UTC
 #   '0 */6 * * *' - Every 6 hours
 #   '0 0 * * 1'   - Every Monday at midnight
-schedule_cron: '0 */6 * * *'
+schedule_cron: '0 */3 * * *'
 
 # Commit message format (use {timestamp} placeholder)
 commit_message: "Activity update - {timestamp}"
@@ -29,4 +29,4 @@ activity_file: "ACTIVITY.md"
 # Random delay between commits (in seconds)
 # This makes the commits appear more natural
 min_delay: 0
-max_delay: 30
+max_delay: 10
